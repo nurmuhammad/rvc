@@ -110,20 +110,27 @@ public class RvcHandler extends ServletContextHandler {
             content = assignContent(content, response.content());
 
             Route route = rc.findMatchRoute(httpMethod, target, serverName, accept);
+            if (route == null && httpMethod == HttpMethod.HEAD) {
+                route = rc.findMatchRoute(HttpMethod.GET, target, serverName, accept);
+            }
             if (route != null) {
                 Request.get().setRoute(route);
-                content = assignContent(content, route.action.handle());
-            } else {
-                if (httpMethod == HttpMethod.HEAD) {
-                    route = rc.findMatchRoute(HttpMethod.GET, target, serverName, accept);
-                    if (route != null) {
-                        Request.get().setRoute(route);
-                        content = assignContent(content, route.action.handle());
-                    } else {
-                        content = assignContent(content, error(HttpServletResponse.SC_NOT_FOUND, serverName));
+                Object result;
+                if (route.cacheExpire > 0) {
+                    String url = Request.get().url2();
+                    result = Cache.get(url);
+                    if (result == null) {
+                        result = route.action.handle();
+                        Cache.put(url, result, route.cacheExpire);
                     }
+                } else {
+                    result = route.action.handle();
                 }
+                content = assignContent(content, result);
+            } else {
+                content = assignContent(content, error(HttpServletResponse.SC_NOT_FOUND, serverName));
             }
+
             //After filters
             filter(HttpMethod.AFTER, target, serverName, accept);
             content = assignContent(content, response.content());
@@ -193,7 +200,7 @@ public class RvcHandler extends ServletContextHandler {
             outputStream.write(String.valueOf(content).getBytes("utf-8"));
         }
 
-        if(outputStream instanceof GZIPOutputStream){
+        if (outputStream instanceof GZIPOutputStream) {
             outputStream.flush();
             outputStream.close();
         }
@@ -262,13 +269,13 @@ public class RvcHandler extends ServletContextHandler {
 
     }
 
-    OutputStream gzipWrapper(OutputStream outputStream){
+    OutputStream gzipWrapper(OutputStream outputStream) {
 
-        if(!Response.get().isGzip()){
+        if (!Response.get().isGzip()) {
             return outputStream;
         }
 
-        if(!Request.get().raw().getHeader("Accept-Encoding").contains("gzip")){
+        if (!Request.get().raw().getHeader("Accept-Encoding").contains("gzip")) {
             return outputStream;
         }
 

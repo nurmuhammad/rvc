@@ -229,6 +229,10 @@ public class RvcServer {
         Action actionNew = action;
 
         for (Object param : params) {
+            if (param instanceof Integer) {
+                cacheExpire = ((Integer) param).longValue();
+                continue;
+            }
             if (param instanceof Long) {
                 cacheExpire = (long) param;
                 continue;
