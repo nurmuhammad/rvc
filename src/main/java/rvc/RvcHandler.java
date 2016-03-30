@@ -111,11 +111,13 @@ public class RvcHandler extends ServletContextHandler {
 
             Route route = rc.findMatchRoute(httpMethod, target, serverName, accept);
             if (route != null) {
+                Request.get().setRoute(route);
                 content = assignContent(content, route.action.handle());
             } else {
                 if (httpMethod == HttpMethod.HEAD) {
                     route = rc.findMatchRoute(HttpMethod.GET, target, serverName, accept);
                     if (route != null) {
+                        Request.get().setRoute(route);
                         content = assignContent(content, route.action.handle());
                     } else {
                         content = assignContent(content, error(HttpServletResponse.SC_NOT_FOUND, serverName));
@@ -165,12 +167,12 @@ public class RvcHandler extends ServletContextHandler {
             return;
         }
 
-        if (content == null) {
-            content = error(404, serverName);
-        }
-
         if (servletResponse.getContentType() == null) {
             servletResponse.setContentType("text/html; charset=utf-8");
+        }
+
+        if (content == null) {
+            content = error(404, serverName);
         }
 
         OutputStream outputStream = servletResponse.getOutputStream();
@@ -211,7 +213,6 @@ public class RvcHandler extends ServletContextHandler {
             return false;
         }
 
-
         return false;
     }
 
@@ -220,6 +221,7 @@ public class RvcHandler extends ServletContextHandler {
         List<Route> matchRouteEntries =
                 rvcServer.routeContainer.findMatchFilters(httpMethod, target, domain, acceptType);
         for (Route route : matchRouteEntries) {
+            Request.get().setRoute(route);
             route.filter.handle();
         }
     }
@@ -233,6 +235,7 @@ public class RvcHandler extends ServletContextHandler {
 
             if (route != null) {
                 try {
+                    Request.get().setRoute(route);
                     return route.action.handle();
                 } catch (Throwable throwable) {
                     logger.error("Internal error", throwable);

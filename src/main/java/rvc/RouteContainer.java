@@ -56,7 +56,7 @@ public class RouteContainer {
                 continue;
             }
 
-            if (route.match(httpMethod, path) && route.matchDomain(domain)) {
+            if (route.matchDomain(domain) && route.match(httpMethod, path)) {
                 if (route.matchAcceptedType(acceptedType)) {
                     return route;
                 }
@@ -74,7 +74,7 @@ public class RouteContainer {
                 continue;
             }
 
-            if (route.match(httpMethod, path) && route.matchDomain(domain)) {
+            if (route.matchDomain(domain) && route.match(httpMethod, path)) {
                 if (route.matchAcceptedType(acceptedType)) {
                     matchFilters.add(route);
                 }
@@ -87,8 +87,8 @@ public class RouteContainer {
     public Route findMatchException(Class<? extends Exception> exception, String domain) {
         for (Route route : exceptions) {
 
-            if (route.matchDomain(domain) && exception != null) {
-                if (exception.equals(route.exception)){
+            if (exception != null && route.matchDomain(domain)) {
+                if (exception.equals(route.exception)) {
                     return route;
                 }
 

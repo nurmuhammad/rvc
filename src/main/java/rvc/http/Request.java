@@ -4,12 +4,14 @@ package rvc.http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rvc.Context;
+import rvc.Route;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.*;
 
 public class Request {
 
@@ -25,8 +27,22 @@ public class Request {
 
     private boolean forwarded = false;
 
+    private Set<String> headers = null;
+
+    private Map<String, String> params;
+
+    private List<String> splats;
+
+    Route route;
+
     public Request(HttpServletRequest servletRequest) {
         this.servletRequest = servletRequest;
+    }
+
+    public void setRoute(Route route) {
+        this.route = route;
+        params = null;
+        splats = null;
     }
 
     public HttpServletRequest raw() {
@@ -60,8 +76,106 @@ public class Request {
         return forwarded;
     }
 
+    public Map<String, String> params() {
+        if (params == null) {
+            params = route.getParams(servletRequest.getRequestURI());
+        }
+        return params;
+    }
+
+    public String params(String param) {
+        if (param == null) {
+            return null;
+        }
+
+        if (param.startsWith(":")) {
+            return params().get(param.toLowerCase());
+        } else {
+            return params().get(":" + param.toLowerCase());
+        }
+    }
+
+    public List<String> splats() {
+        if (splats == null) {
+            splats = route.getSplats(servletRequest.getRequestURI());
+        }
+        return splats;
+    }
+
+    public long contentLength() {
+        return servletRequest.getContentLengthLong();
+    }
+
+    public String header(String header) {
+        return servletRequest.getHeader(header);
+    }
+
+    public String requestMethod() {
+        return servletRequest.getMethod();
+    }
+
+    public String scheme() {
+        return servletRequest.getScheme();
+    }
+
+    public String host() {
+        return servletRequest.getHeader("host");
+    }
+
+    public String userAgent() {
+        return servletRequest.getHeader("user-agent");
+    }
+
+    public int port() {
+        return servletRequest.getServerPort();
+    }
+
+    public String pathInfo() {
+        return servletRequest.getPathInfo();
+    }
+
+    public String servletPath() {
+        return servletRequest.getServletPath();
+    }
+
+    public String contextPath() {
+        return servletRequest.getContextPath();
+    }
 
     public String url() {
+        return servletRequest.getRequestURL().toString();
+    }
+
+    public String contentType() {
+        return servletRequest.getContentType();
+    }
+
+    public String ip() {
+        return servletRequest.getRemoteAddr();
+    }
+
+    public String queryString() {
+        return servletRequest.getQueryString();
+    }
+
+    public void attribute(String attribute, Object value) {
+        servletRequest.setAttribute(attribute, value);
+    }
+
+    public <T> T attribute(String attribute) {
+        return (T) servletRequest.getAttribute(attribute);
+    }
+
+    public Set<String> attributes() {
+        Set<String> attrList = new HashSet<>();
+        Enumeration<String> attributes = servletRequest.getAttributeNames();
+        while (attributes.hasMoreElements()) {
+            attrList.add(attributes.nextElement());
+        }
+        return attrList;
+    }
+
+    public String url2() {
         StringBuilder builder = new StringBuilder(servletRequest.getScheme())
                 .append("://")
                 .append(servletRequest.getHeader("host"));
@@ -93,4 +207,5 @@ public class Request {
 
         return builder.toString();
     }
+
 }

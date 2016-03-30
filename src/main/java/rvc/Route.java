@@ -1,6 +1,6 @@
 package rvc;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class Route {
 
@@ -12,6 +12,8 @@ public class Route {
     Filter filter;
     long cacheExpire = 0;
     Class<? extends Exception> exception;
+
+    private String[] pathParts = null;
 
     boolean match(HttpMethod httpMethod, String path) {
         if (this.httpMethod != httpMethod) {
@@ -28,7 +30,10 @@ public class Route {
         if (this.path.equals(path)) {
             return true;
         }
-        String[] pathParts = parsePath(this.path);
+
+        if (pathParts == null) {
+            pathParts = parsePath(this.path);
+        }
         String[] pathParts2 = parsePath(path);
 
         if (pathParts.length == pathParts2.length) {
@@ -70,18 +75,7 @@ public class Route {
         return false;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-
-        Route route = new Route();
-        route.path = "/:name/*";
-        route.httpMethod = HttpMethod.BEFORE;
-
-        boolean t = route.match(HttpMethod.BEFORE, "url/text/1");
-        System.out.println(t);
-
-    }
-
-    public static String[] parsePath(String path) {
+    static String[] parsePath(String path) {
         ArrayList<String> result = new ArrayList<>();
         String parts[] = path.split("/");
         for (String part : parts) {
@@ -91,16 +85,47 @@ public class Route {
         return result.toArray(new String[result.size()]);
     }
 
-    public static String[] parsePath2(String path) {
-        return path.split("/");
+    public Map<String, String> getParams(String path) {
+        Map<String, String> params = new HashMap<>();
+
+        if (pathParts == null) {
+            pathParts = parsePath(this.path);
+        }
+        String[] pathParts2 = parsePath(path);
+
+
+        for (int i = 0; i < pathParts.length; i++) {
+            if (pathParts[i].startsWith(":")) {
+                params.put(pathParts[i], pathParts2[i]);
+            }
+        }
+        return Collections.unmodifiableMap(params);
     }
 
-    public static boolean isParam(String pathPart) {
-        return pathPart.startsWith(":");
-    }
+    public List<String> getSplats(String path) {
+        List<String> splats = new ArrayList<>();
 
-    public static boolean isSplat(String pathPart) {
-        return pathPart.equals("*");
+        if (pathParts == null) {
+            pathParts = parsePath(this.path);
+        }
+        String[] pathParts2 = parsePath(path);
+
+        for (int i = 0; i < pathParts.length; i++) {
+            if (pathParts[i].equals("*")) {
+
+                StringBuilder splat = new StringBuilder(pathParts2[i]);
+                if (pathParts.length != pathParts2.length && i == pathParts.length - 1) {
+                    for (int j = i + 1; j < pathParts2.length; j++) {
+                        splat.append("/");
+                        splat.append(pathParts2[j]);
+                    }
+                }
+
+                splats.add(splat.toString());
+            }
+        }
+
+        return Collections.unmodifiableList(splats);
     }
 
     public static boolean matchDomain(String domain, String serverName) {
@@ -135,5 +160,24 @@ public class Route {
         }
 
         return false;
+    }
+
+    public static boolean isParam(String pathPart) {
+        return pathPart.startsWith(":");
+    }
+
+    public static boolean isSplat(String pathPart) {
+        return pathPart.equals("*");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+
+        Route route = new Route();
+        route.path = "/:name/*";
+        route.httpMethod = HttpMethod.BEFORE;
+
+        boolean t = route.match(HttpMethod.BEFORE, "url/text/1");
+        System.out.println(t);
+
     }
 }
