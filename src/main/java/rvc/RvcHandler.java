@@ -276,7 +276,8 @@ public class RvcHandler extends ServletContextHandler {
             return outputStream;
         }
 
-        if (!Request.get().raw().getHeader("Accept-Encoding").contains("gzip")) {
+        String gzipAccept = Request.get().header("Accept-Encoding");
+        if (gzipAccept == null || !gzipAccept.contains("gzip")) {
             return outputStream;
         }
 
