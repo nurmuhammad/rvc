@@ -23,6 +23,7 @@ import java.util.zip.GZIPOutputStream;
 
 
 /*TODO: Needs more improvements*/
+/*TODO: Need to imlement ssl keys*/
 public class RvcHandler extends ServletContextHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(RvcHandler.class);

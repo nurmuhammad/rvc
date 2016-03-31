@@ -1,15 +1,52 @@
 package rvc;
 
-import org.junit.Before;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.junit.*;
 
-/**
- * Created by Nurmuhammad on 06.03.2016.
- */
+import java.io.InputStream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 
 public class RvcServerTest {
 
-    @Before
-    public void start() {
+    RvcServer server;
+    HttpClient httpClient = new DefaultHttpClient();
 
+    public RvcServerTest() {
+        start();
+    }
+
+    public void start() {
+        server = new RvcServer()
+                .get("/test", () -> "test")
+                .quickStart();
+    }
+
+    @Test
+    public void test(){
+        HttpGet httpGet = new HttpGet("http://localhost:4567/test");
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            assertEquals(200, response.getStatusLine().getStatusCode());
+            InputStream is = response.getEntity().getContent();
+            String content = IOUtils.toString(is);
+            assertEquals(content, "test");
+        } catch (Exception ex) {
+            fail(ex.toString());
+        } finally {
+            httpGet.releaseConnection();
+        }
+
+    }
+
+    @After
+    public void stop() throws Exception {
+        server.stop();
     }
 }

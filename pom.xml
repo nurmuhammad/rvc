@@ -87,6 +87,11 @@
             <version>1.0.8</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.4</version>
+        </dependency>
 
         <!--TEST DEPENDENCIES-->
         <dependency>
@@ -102,6 +107,14 @@
             <version>4.5.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 

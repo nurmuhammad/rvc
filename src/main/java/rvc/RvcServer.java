@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RvcServer {
@@ -36,7 +37,7 @@ public class RvcServer {
 
     protected Server server;
 
-    public RvcServer start() {
+    private void init() {
 
         if (maxThreads > 0) {
             int max = (maxThreads > 0) ? maxThreads : 200;
@@ -58,7 +59,20 @@ public class RvcServer {
 
         RvcHandler handler = new RvcHandler(server);
         handler.setRvcServer(this);
+    }
 
+    public RvcServer quickStart(){
+        init();
+        try {
+            server.start();
+        } catch (Exception e) {
+            logger.error("Starting the server failed.", e);
+        }
+        return this;
+    }
+
+    public RvcServer start(){
+        init();
         try {
             server.start();
             server.join();
