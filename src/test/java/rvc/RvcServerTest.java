@@ -18,10 +18,8 @@ public class RvcServerTest {
     RvcServer server;
     HttpClient httpClient = new DefaultHttpClient();
 
-    public RvcServerTest() {
-        start();
-    }
 
+    @Before
     public void start() {
         server = new RvcServer()
                 .get("/test", () -> "test")
