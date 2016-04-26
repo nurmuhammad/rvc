@@ -5,6 +5,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rvc.http.Request;
@@ -59,18 +61,24 @@ public class RvcHandler extends ServletContextHandler {
         }
     }
 
-    @Override
-    public void doHandle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+    void handleServlets(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
             throws IOException, ServletException {
 
-        Response response = new Response(servletResponse);
-        Request request = new Request(servletRequest);
+        ServletHandler handler = getServletHandler();
+        Route r = new Route();
+        for(ServletMapping servletMapping : handler.getServletMappings()){
+            for(String s : servletMapping.getPathSpecs()){
+                r.path(s);
+                if(r.matchPath(target)){
+                    super.doHandle(target, baseRequest, servletRequest, servletResponse);
+                    return;
+                }
+            }
+        }
+    }
 
-        rvc.Context.set(Request.class, request);
-        rvc.Context.set(Response.class, response);
-
-        String serverName = servletRequest.getServerName();
-
+    void handleResourceHandle(String serverName, String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+            throws IOException, ServletException{
         ResourceHandler resourceHandler = resourceHandlers.get(serverName);
         if (resourceHandler == null) {
             for (String key : resourceHandlers.keySet()) {
@@ -88,10 +96,19 @@ public class RvcHandler extends ServletContextHandler {
             //TODO: implement gzip handler
             resourceHandler.handle(target, baseRequest, servletRequest, servletResponse);
         }
+    }
 
-        if (baseRequest.isHandled()) {
-            return;
-        }
+    @Override
+    public void doHandle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+            throws IOException, ServletException {
+
+        Response response = new Response(servletResponse);
+        Request request = new Request(servletRequest);
+
+        rvc.Context.set(Request.class, request);
+        rvc.Context.set(Response.class, response);
+
+        String serverName = servletRequest.getServerName();
 
         String method = servletRequest.getHeader("X-HTTP-Method-Override");
         if (method == null) {
@@ -108,6 +125,15 @@ public class RvcHandler extends ServletContextHandler {
         try {
             //BEFORE filters
             filter(HttpMethod.BEFORE, target, serverName, accept);
+
+            //servlet handler
+            handleServlets(target, baseRequest, servletRequest, servletResponse);
+            if (baseRequest.isHandled()) {return;}
+
+            //resources handler
+            handleResourceHandle(serverName, target, baseRequest, servletRequest, servletResponse);
+            if (baseRequest.isHandled()) {return;}
+
             content = assignContent(content, response.content());
 
             Route route = rc.findMatchRoute(httpMethod, target, serverName, accept);

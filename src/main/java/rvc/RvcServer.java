@@ -37,7 +37,7 @@ public class RvcServer {
 
     protected Server server;
 
-    private void init() {
+    public RvcHandler init() {
 
         if (maxThreads > 0) {
             int max = (maxThreads > 0) ? maxThreads : 200;
@@ -59,10 +59,11 @@ public class RvcServer {
 
         RvcHandler handler = new RvcHandler(server);
         handler.setRvcServer(this);
+        return handler;
     }
 
     public RvcServer quickStart(){
-        init();
+//        init();
         try {
             server.start();
         } catch (Exception e) {
@@ -72,7 +73,7 @@ public class RvcServer {
     }
 
     public RvcServer start(){
-        init();
+//        init();
         try {
             server.start();
             server.join();
@@ -90,6 +91,10 @@ public class RvcServer {
 
     public RvcServer restart() {
         return this;
+    }
+
+    public Server getServer() {
+        return server;
     }
 
     public RvcServer folder(String location) {

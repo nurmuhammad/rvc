@@ -15,6 +15,11 @@ public class Route {
 
     private String[] pathParts = null;
 
+    void path(String path){
+        this.path = path;
+        pathParts = null;
+    }
+
     boolean match(HttpMethod httpMethod, String path) {
         if (this.httpMethod != httpMethod) {
             return false;
