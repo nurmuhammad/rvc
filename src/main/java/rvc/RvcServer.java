@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RvcServer {
@@ -62,7 +61,7 @@ public class RvcServer {
         return handler;
     }
 
-    public RvcServer quickStart(){
+    public RvcServer quickStart() {
 //        init();
         try {
             server.start();
@@ -72,7 +71,7 @@ public class RvcServer {
         return this;
     }
 
-    public RvcServer start(){
+    public RvcServer start() {
 //        init();
         try {
             server.start();
@@ -276,7 +275,20 @@ public class RvcServer {
     }
 
     public RvcServer route(HttpMethod httpMethod, String path, String domain, Action action, String acceptType, long cacheExpire) {
-        routeContainer.addRoute(httpMethod, path, domain, acceptType, cacheExpire, action);
+        if (path.contains(", ")) {
+            String[] path2 = path.split(", ");
+            for (String p : path2) {
+                if (domain.contains(", ")) {
+                    String[] domain2 = domain.split(" ,");
+                    for (String d : domain2) {
+                        routeContainer.addRoute(httpMethod, p, d, acceptType, cacheExpire, action);
+                    }
+                }
+                routeContainer.addRoute(httpMethod, p, domain, acceptType, cacheExpire, action);
+            }
+        } else {
+            routeContainer.addRoute(httpMethod, path, domain, acceptType, cacheExpire, action);
+        }
         return this;
     }
 
@@ -313,7 +325,20 @@ public class RvcServer {
     }
 
     public RvcServer filter(HttpMethod httpMethod, String path, String domain, String acceptType, Filter filter) {
-        routeContainer.addFilter(httpMethod, path, domain, acceptType, filter);
+        if (path.contains(", ")) {
+            String[] path2 = path.split(", ");
+            for (String p : path2) {
+                if (domain.contains(", ")) {
+                    String[] domain2 = domain.split(" ,");
+                    for (String d : domain2) {
+                        routeContainer.addFilter(httpMethod, p, d, acceptType, filter);
+                    }
+                }
+                routeContainer.addFilter(httpMethod, p, domain, acceptType, filter);
+            }
+        } else {
+            routeContainer.addFilter(httpMethod, path, domain, acceptType, filter);
+        }
         return this;
     }
 

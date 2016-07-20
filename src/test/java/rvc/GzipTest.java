@@ -28,9 +28,10 @@ public class GzipTest {
 
     @Before
     public void start() {
-        server = new RvcServer()
+        server = new RvcServer();
+        server.init();
 
-                .get("/gzip", () -> {
+                server.get("/gzip", () -> {
                     Response.get().gzip();
                     return content;
                 })

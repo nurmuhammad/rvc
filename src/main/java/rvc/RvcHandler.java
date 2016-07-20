@@ -126,6 +126,11 @@ public class RvcHandler extends ServletContextHandler {
             //BEFORE filters
             filter(HttpMethod.BEFORE, target, serverName, accept);
 
+            if (request.isForwarded() || response.isRedirected()) {
+                baseRequest.setHandled(true);
+                return;
+            }
+
             //servlet handler
             handleServlets(target, baseRequest, servletRequest, servletResponse);
             if (baseRequest.isHandled()) {return;}

@@ -21,13 +21,14 @@ public class RvcServerTest {
 
     @Before
     public void start() {
-        server = new RvcServer()
-                .get("/test", () -> "test")
+        server = new RvcServer();
+        server.init();
+        server.get("/test", () -> "test")
                 .quickStart();
     }
 
     @Test
-    public void test(){
+    public void test() {
         HttpGet httpGet = new HttpGet("http://localhost:4567/test");
         try {
             HttpResponse response = httpClient.execute(httpGet);
