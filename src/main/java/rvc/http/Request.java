@@ -175,6 +175,14 @@ public class Request {
         return attrList;
     }
 
+    public String queryParams(String queryParam) {
+        return this.servletRequest.getParameter(queryParam);
+    }
+
+    public String[] queryParamsValues(String queryParam) {
+        return this.servletRequest.getParameterValues(queryParam);
+    }
+
     public String url2() {
         StringBuilder builder = new StringBuilder(servletRequest.getScheme())
                 .append("://")

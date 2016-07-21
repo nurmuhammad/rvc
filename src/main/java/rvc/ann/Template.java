@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(METHOD)
 public @interface Template {
 
-    TemplateEngine value() default TemplateEngine.FREEMARKER;
+    TemplateEngine value() default TemplateEngine.PEBBLE;
 
     String viewName() default Constants.NULL_VALUE;
 

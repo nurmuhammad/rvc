@@ -1,12 +1,18 @@
 package rvc;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rvc.ann.*;
+import rvc.http.Response;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +26,9 @@ public class RvcServer {
     public static final String DEFAULT_DOMAIN = "*";
     public static final String ALL_PATH = "*";
     public static final long DEFAULT_CACHE_LIFE = 0;
+
+    public static Gson GSON = new GsonBuilder().setExclusionStrategies(new AnnotationSkipStrategy()).create();
+    protected Map<Template.TemplateEngine, TemplateEngine> templateMap = new HashMap<>();
 
     protected int port = DEFAULT_PORT;
     protected String ip = "0.0.0.0";
@@ -274,7 +283,7 @@ public class RvcServer {
         return this;
     }
 
-    public RvcServer route(HttpMethod httpMethod, String path, String domain, Action action, String acceptType, long cacheExpire) {
+    private RvcServer route(HttpMethod httpMethod, String path, String domain, Action action, String acceptType, long cacheExpire) {
         if (path.contains(", ")) {
             String[] path2 = path.split(", ");
             for (String p : path2) {
@@ -351,7 +360,134 @@ public class RvcServer {
         return this;
     }
 
-    RvcServer classes(Class... aClass) {
+    RvcServer classes(Class... aClasses) {
+        try {
+            for (Class aClass : aClasses) {
+                if (aClass.isAnnotationPresent(Controller.class)) {
+                    controllerClass(aClass);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error during initialisation class. ", e);
+        }
+        return this;
+    }
+
+    private void controllerClass(Class aClass) throws Exception {
+        Object controller = aClass.newInstance();
+        String uri = controller.getClass().getAnnotation(Controller.class).url();
+        for (Method method : aClass.getDeclaredMethods()) {
+            String path;
+            if (method.isAnnotationPresent(GET.class)) {
+                GET get = method.getAnnotation(GET.class);
+                path = get.absolutePath() ? get.value() : uri + get.value();
+                methodClass(path, controller, method, HttpMethod.GET);
+            }
+            if (method.isAnnotationPresent(POST.class)) {
+                POST post = method.getAnnotation(POST.class);
+                path = post.absolutePath() ? post.value() : uri + post.value();
+                methodClass(path, controller, method, HttpMethod.POST);
+            }
+            if (method.isAnnotationPresent(PUT.class)) {
+                PUT put = method.getAnnotation(PUT.class);
+                path = put.absolutePath() ? put.value() : uri + put.value();
+                methodClass(path, controller, method, HttpMethod.PUT);
+            }
+            if (method.isAnnotationPresent(DELETE.class)) {
+                DELETE delete = method.getAnnotation(DELETE.class);
+                path = delete.absolutePath() ? delete.value() : uri + delete.value();
+                methodClass(path, controller, method, HttpMethod.DELETE);
+            }
+            if (method.isAnnotationPresent(HEAD.class)) {
+                HEAD head = method.getAnnotation(HEAD.class);
+                path = head.absolutePath() ? head.value() : uri + head.value();
+                methodClass(path, controller, method, HttpMethod.HEAD);
+            }
+            if (method.isAnnotationPresent(TRACE.class)) {
+                TRACE trace = method.getAnnotation(TRACE.class);
+                path = trace.absolutePath() ? trace.value() : uri + trace.value();
+                methodClass(path, controller, method, HttpMethod.TRACE);
+            }
+            if (method.isAnnotationPresent(CONNECT.class)) {
+                CONNECT connect = method.getAnnotation(CONNECT.class);
+                path = connect.absolutePath() ? connect.value() : uri + connect.value();
+                methodClass(path, controller, method, HttpMethod.CONNECT);
+            }
+            if (method.isAnnotationPresent(OPTIONS.class)) {
+                OPTIONS options = method.getAnnotation(OPTIONS.class);
+                path = options.absolutePath() ? options.value() : uri + options.value();
+                methodClass(path, controller, method, HttpMethod.OPTIONS);
+            }
+
+            if (method.isAnnotationPresent(Before.class)) {
+                Before before = method.getAnnotation(Before.class);
+                filterClass(before.value(), controller, method, HttpMethod.BEFORE);
+            }
+            if (method.isAnnotationPresent(After.class)) {
+                After before = method.getAnnotation(After.class);
+                filterClass(before.value(), controller, method, HttpMethod.AFTER);
+            }
+        }
+    }
+
+    private void filterClass(String path, Object controller, Method method, HttpMethod httpMethod) {
+        String domain = DEFAULT_DOMAIN;
+        String acceptType = DEFAULT_ACCEPT_TYPE;
+        if (method.isAnnotationPresent(Domain.class)) {
+            domain = method.getAnnotation(Domain.class).value();
+        }
+        if (method.isAnnotationPresent(AcceptType.class)) {
+            acceptType = method.getAnnotation(AcceptType.class).value();
+        }
+        filter(httpMethod, path, domain, acceptType, () -> method.invoke(controller));
+    }
+
+    private void methodClass(String path, Object controller, Method method, HttpMethod httpMethod) {
+
+        String domain = DEFAULT_DOMAIN;
+        String acceptType = DEFAULT_ACCEPT_TYPE;
+        long cache = 0;
+        boolean json = method.isAnnotationPresent(Json.class);
+        TemplateEngine templateEngine = null;
+
+        if (method.isAnnotationPresent(Domain.class)) {
+            domain = method.getAnnotation(Domain.class).value();
+        }
+        if (method.isAnnotationPresent(AcceptType.class)) {
+            acceptType = method.getAnnotation(AcceptType.class).value();
+        }
+
+        if (method.isAnnotationPresent(Cacheable.class)) {
+            cache = method.getAnnotation(Cacheable.class).expire();
+        }
+
+        if (method.isAnnotationPresent(Template.class)) {
+            Template.TemplateEngine t = method.getAnnotation(Template.class).value();
+            templateEngine = templateMap.get(t);
+            if (templateEngine == null) {
+                logger.error("Can not find TemplateEngine for method: " + controller.getClass().getSimpleName() + "." + method.getName() + " in templateMap", new Throwable());
+                return;
+            }
+        }
+
+        if (json) {
+            route(httpMethod, path, domain, () -> {
+                Response.get().type("application/json");
+                return method.invoke(controller);
+            }, cache, acceptType, (ResponseTransformer) GSON::toJson);
+            return;
+        }
+
+        if (templateEngine != null) {
+            route(httpMethod, path, domain, () -> method.invoke(controller), cache, acceptType, templateEngine);
+            return;
+        }
+
+        route(httpMethod, path, domain, () -> method.invoke(controller), cache, acceptType);
+    }
+
+    public RvcServer addTemplate(Template.TemplateEngine template, TemplateEngine engine) {
+        templateMap.put(template, engine);
         return this;
     }
 

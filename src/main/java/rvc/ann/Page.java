@@ -19,7 +19,7 @@ public @interface Page {
 
     boolean absolutePath() default false;
 
-    Template.TemplateEngine value() default Template.TemplateEngine.FREEMARKER;
+    Template.TemplateEngine value() default Template.TemplateEngine.PEBBLE;
 
     String viewName() default Constants.NULL_VALUE;
 
