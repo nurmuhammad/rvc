@@ -496,7 +496,7 @@ public class RvcServer {
                 String replacement = "$1-$2";
                 viewName = method.getName().replaceAll(regex, replacement).toLowerCase();
             }
-            if (!viewName.endsWith(templateSuffix)) {
+            if (!viewName.endsWith(templateSuffix) && !viewName.contains(".")) {
                 viewName = viewName + templateSuffix;
             }
             final String view = viewName;
@@ -504,7 +504,7 @@ public class RvcServer {
                 Object result = method.invoke(controller);
                 if (result instanceof ModelAndView) {
                     String currentViewName = ((ModelAndView) result).getViewName();
-                    if (!currentViewName.endsWith(templateSuffix)) {
+                    if (!currentViewName.endsWith(templateSuffix) && !currentViewName.contains(".")) {
                         ((ModelAndView) result).viewName = currentViewName + templateSuffix;
                     }
                     return result;
