@@ -32,6 +32,7 @@ public class RvcServer {
 
     protected int port = DEFAULT_PORT;
     protected String ip = "0.0.0.0";
+    protected String templateSuffix = "";
 
     protected Ssl ssl;
 
@@ -434,9 +435,10 @@ public class RvcServer {
     }
 
     private void filterClass(String path, Object controller, Method method, HttpMethod httpMethod) {
-        if(path.startsWith("/")){
+        if (path.startsWith("/")) {
             path = path.substring(1);
         }
+        method.setAccessible(true);
         String domain = DEFAULT_DOMAIN;
         String acceptType = DEFAULT_ACCEPT_TYPE;
         if (method.isAnnotationPresent(Domain.class)) {
@@ -449,9 +451,10 @@ public class RvcServer {
     }
 
     private void methodClass(String path, Object controller, Method method, HttpMethod httpMethod) {
-        if(path.startsWith("/")){
+        if (path.startsWith("/")) {
             path = path.substring(1);
         }
+        method.setAccessible(true);
         String domain = DEFAULT_DOMAIN;
         String acceptType = DEFAULT_ACCEPT_TYPE;
         long cache = 0;
@@ -488,17 +491,35 @@ public class RvcServer {
 
         if (templateEngine != null) {
             String viewName = method.getAnnotation(Template.class).viewName();
+            if (Constants.NULL_VALUE.equals(viewName)) {
+                String regex = "([a-z])([A-Z])";
+                String replacement = "$1-$2";
+                viewName = method.getName().replaceAll(regex, replacement).toLowerCase();
+            }
+            if (!viewName.endsWith(templateSuffix)) {
+                viewName = viewName + templateSuffix;
+            }
+            final String view = viewName;
             route(httpMethod, path, domain, () -> {
                 Object result = method.invoke(controller);
                 if (result instanceof ModelAndView) {
+                    String currentViewName = ((ModelAndView) result).getViewName();
+                    if (!currentViewName.endsWith(templateSuffix)) {
+                        ((ModelAndView) result).viewName = currentViewName + templateSuffix;
+                    }
                     return result;
                 }
-                return new ModelAndView(result, viewName);
+                return new ModelAndView(result, view);
             }, cache, acceptType, templateEngine);
             return;
         }
 
         route(httpMethod, path, domain, () -> method.invoke(controller), cache, acceptType);
+    }
+
+    public RvcServer suffix(String suffix) {
+        templateSuffix = suffix;
+        return this;
     }
 
     public RvcServer addTemplate(Template.TemplateEngine template, TemplateEngine engine) {

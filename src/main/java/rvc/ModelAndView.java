@@ -4,7 +4,7 @@ package rvc;
 public class ModelAndView {
 
     private Object model;
-    private String viewName;
+    String viewName;
 
     public ModelAndView(Object model, String viewName) {
         this.model = model;
