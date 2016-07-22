@@ -68,6 +68,6 @@ http://localhost:4567/to-json
 http://localhost:4567/index
 
 
-Do you want real project? So fork my rvc-cms from here
+Here my real project using this project. Form my from here:
 
 https://github.com/nurmuhammad/rvcjava-cms
