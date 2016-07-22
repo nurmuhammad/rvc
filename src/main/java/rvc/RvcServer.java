@@ -360,7 +360,7 @@ public class RvcServer {
         return this;
     }
 
-    RvcServer classes(Class... aClasses) {
+    public RvcServer classes(Class... aClasses) {
         try {
             for (Class aClass : aClasses) {
                 if (aClass.isAnnotationPresent(Controller.class)) {
@@ -376,61 +376,67 @@ public class RvcServer {
     private void controllerClass(Class aClass) throws Exception {
         Object controller = aClass.newInstance();
         String uri = controller.getClass().getAnnotation(Controller.class).url();
+        uri = uri.endsWith("/") ? uri : uri + "/";
+        Class[] httpMethods = new Class[]{GET.class, POST.class, PUT.class, DELETE.class, HEAD.class, TRACE.class, CONNECT.class, OPTIONS.class};
+
+        String regex = "([a-z])([A-Z])";
+        String replacement = "$1-$2";
+
         for (Method method : aClass.getDeclaredMethods()) {
             String path;
-            if (method.isAnnotationPresent(GET.class)) {
-                GET get = method.getAnnotation(GET.class);
-                path = get.absolutePath() ? get.value() : uri + get.value();
-                methodClass(path, controller, method, HttpMethod.GET);
+
+            for (Class ann : httpMethods) {
+                if (method.isAnnotationPresent(ann)) {
+                    String name = ann.getSimpleName().toUpperCase();
+                    HttpMethod httpMethod = HttpMethod.valueOf(name);
+                    Annotation annotation = method.getAnnotation(ann);
+                    Method valueMethod = annotation.getClass().getDeclaredMethod("value");
+                    String value = (String) valueMethod.invoke(annotation);
+                    Method absolutePathMethod = annotation.getClass().getDeclaredMethod("absolutePath");
+                    boolean absolutePath = (boolean) absolutePathMethod.invoke(annotation);
+                    if (Constants.NULL_VALUE.equals(value)) {
+                        value = method.getName().replaceAll(regex, replacement).toLowerCase();
+                    }
+                    for (String s : value.split(", ")) {
+                        s = s.trim();
+                        path = absolutePath ? s : uri + s;
+                        methodClass(path, controller, method, httpMethod);
+                    }
+                }
             }
-            if (method.isAnnotationPresent(POST.class)) {
-                POST post = method.getAnnotation(POST.class);
-                path = post.absolutePath() ? post.value() : uri + post.value();
-                methodClass(path, controller, method, HttpMethod.POST);
-            }
-            if (method.isAnnotationPresent(PUT.class)) {
-                PUT put = method.getAnnotation(PUT.class);
-                path = put.absolutePath() ? put.value() : uri + put.value();
-                methodClass(path, controller, method, HttpMethod.PUT);
-            }
-            if (method.isAnnotationPresent(DELETE.class)) {
-                DELETE delete = method.getAnnotation(DELETE.class);
-                path = delete.absolutePath() ? delete.value() : uri + delete.value();
-                methodClass(path, controller, method, HttpMethod.DELETE);
-            }
-            if (method.isAnnotationPresent(HEAD.class)) {
-                HEAD head = method.getAnnotation(HEAD.class);
-                path = head.absolutePath() ? head.value() : uri + head.value();
-                methodClass(path, controller, method, HttpMethod.HEAD);
-            }
-            if (method.isAnnotationPresent(TRACE.class)) {
-                TRACE trace = method.getAnnotation(TRACE.class);
-                path = trace.absolutePath() ? trace.value() : uri + trace.value();
-                methodClass(path, controller, method, HttpMethod.TRACE);
-            }
-            if (method.isAnnotationPresent(CONNECT.class)) {
-                CONNECT connect = method.getAnnotation(CONNECT.class);
-                path = connect.absolutePath() ? connect.value() : uri + connect.value();
-                methodClass(path, controller, method, HttpMethod.CONNECT);
-            }
-            if (method.isAnnotationPresent(OPTIONS.class)) {
-                OPTIONS options = method.getAnnotation(OPTIONS.class);
-                path = options.absolutePath() ? options.value() : uri + options.value();
-                methodClass(path, controller, method, HttpMethod.OPTIONS);
-            }
+
 
             if (method.isAnnotationPresent(Before.class)) {
                 Before before = method.getAnnotation(Before.class);
-                filterClass(before.value(), controller, method, HttpMethod.BEFORE);
+                String value = before.value();
+                if (Constants.NULL_VALUE.equals(value)) {
+                    value = method.getName().replaceAll(regex, replacement).toLowerCase();
+                }
+                for (String s : value.split(", ")) {
+                    s = s.trim();
+                    path = before.absolutePath() ? s : uri + s;
+                    filterClass(path, controller, method, HttpMethod.BEFORE);
+                }
             }
             if (method.isAnnotationPresent(After.class)) {
-                After before = method.getAnnotation(After.class);
-                filterClass(before.value(), controller, method, HttpMethod.AFTER);
+                After after = method.getAnnotation(After.class);
+                String value = after.value();
+                if (Constants.NULL_VALUE.equals(value)) {
+                    value = method.getName().replaceAll(regex, replacement).toLowerCase();
+                }
+                for (String s : value.split(", ")) {
+                    s = s.trim();
+                    path = after.absolutePath() ? s : uri + s;
+                    filterClass(path, controller, method, HttpMethod.AFTER);
+                }
             }
         }
     }
 
     private void filterClass(String path, Object controller, Method method, HttpMethod httpMethod) {
+        if(path.startsWith("/")){
+            path = path.substring(1);
+        }
         String domain = DEFAULT_DOMAIN;
         String acceptType = DEFAULT_ACCEPT_TYPE;
         if (method.isAnnotationPresent(Domain.class)) {
@@ -443,7 +449,9 @@ public class RvcServer {
     }
 
     private void methodClass(String path, Object controller, Method method, HttpMethod httpMethod) {
-
+        if(path.startsWith("/")){
+            path = path.substring(1);
+        }
         String domain = DEFAULT_DOMAIN;
         String acceptType = DEFAULT_ACCEPT_TYPE;
         long cache = 0;
@@ -479,7 +487,14 @@ public class RvcServer {
         }
 
         if (templateEngine != null) {
-            route(httpMethod, path, domain, () -> method.invoke(controller), cache, acceptType, templateEngine);
+            String viewName = method.getAnnotation(Template.class).viewName();
+            route(httpMethod, path, domain, () -> {
+                Object result = method.invoke(controller);
+                if (result instanceof ModelAndView) {
+                    return result;
+                }
+                return new ModelAndView(result, viewName);
+            }, cache, acceptType, templateEngine);
             return;
         }
 

@@ -14,4 +14,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(METHOD)
 public @interface Before {
     String value() default "*";
+    boolean absolutePath() default false;
 }

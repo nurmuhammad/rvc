@@ -15,5 +15,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface After {
 
     String value() default Constants.NULL_VALUE;
+    boolean absolutePath() default false;
 
 }
