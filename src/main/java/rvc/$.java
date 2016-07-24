@@ -1,11 +1,30 @@
 package rvc;
 
+import crypt.BCryptPasswordEncoder;
+
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 public class $ {
+
+    static BCryptPasswordEncoder crypt = new BCryptPasswordEncoder();
+
+    public static String encode(String password) {
+        return crypt.encode(password);
+    }
+
+    public static boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return crypt.matches(rawPassword, encodedPassword);
+    }
+
+    public static int timestamp() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
+    public static Date date(int timestamp) {
+        return new Date(timestamp * 1000);
+    }
+
 
     public static boolean isEmpty(Object value) {
         if (value == null) return true;
@@ -51,4 +70,7 @@ public class $ {
         }
     }
 
+    public static <T> T get(Class<T> type) {
+        return Context.get(type);
+    }
 }

@@ -32,9 +32,8 @@ public class Main {
         rvcServer.classes(
                 WelcomeController.class
                 /*  add more classes here */
-                );
-
-        rvcServer.start();
+                )
+				.start();
     }
 
 }
