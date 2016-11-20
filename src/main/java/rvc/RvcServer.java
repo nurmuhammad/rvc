@@ -12,6 +12,7 @@ import rvc.ann.*;
 import rvc.http.Response;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -447,7 +448,8 @@ public class RvcServer {
         if (method.isAnnotationPresent(AcceptType.class)) {
             acceptType = method.getAnnotation(AcceptType.class).value();
         }
-        filter(httpMethod, path, domain, acceptType, () -> method.invoke(controller));
+        filter(httpMethod, path, domain, acceptType, () -> methodInvoke(method, controller));
+
     }
 
     private void methodClass(String path, Object controller, Method method, HttpMethod httpMethod) {
@@ -484,7 +486,7 @@ public class RvcServer {
         if (json) {
             route(httpMethod, path, domain, () -> {
                 Response.get().type("application/json");
-                return method.invoke(controller);
+                return methodInvoke(method, controller);
             }, cache, acceptType, (ResponseTransformer) GSON::toJson);
             return;
         }
@@ -501,7 +503,7 @@ public class RvcServer {
             }
             final String view = viewName;
             route(httpMethod, path, domain, () -> {
-                Object result = method.invoke(controller);
+                Object result = methodInvoke(method, controller);
                 if (result instanceof ModelAndView) {
                     String currentViewName = ((ModelAndView) result).getViewName();
                     if (!currentViewName.endsWith(templateSuffix) && !currentViewName.contains(".")) {
@@ -514,7 +516,18 @@ public class RvcServer {
             return;
         }
 
-        route(httpMethod, path, domain, () -> method.invoke(controller), cache, acceptType);
+        route(httpMethod, path, domain, () -> methodInvoke(method ,controller), cache, acceptType);
+    }
+
+    private Object methodInvoke(Method method, Object controller) throws Exception {
+        try {
+            return method.invoke(controller);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) e.getCause();
+            }
+            throw e;
+        }
     }
 
     public RvcServer suffix(String suffix) {
