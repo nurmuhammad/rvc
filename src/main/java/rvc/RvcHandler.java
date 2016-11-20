@@ -63,13 +63,13 @@ public class RvcHandler extends ServletContextHandler {
 
     void handleServlets(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
             throws IOException, ServletException {
-
+        if ("/".equals(target)) return; // TODO: can't add "/" servlets :( .fix it
         ServletHandler handler = getServletHandler();
         Route r = new Route();
-        for(ServletMapping servletMapping : handler.getServletMappings()){
-            for(String s : servletMapping.getPathSpecs()){
+        for (ServletMapping servletMapping : handler.getServletMappings()) {
+            for (String s : servletMapping.getPathSpecs()) {
                 r.path(s);
-                if(r.matchPath(target)){
+                if (r.matchPath(target)) {
                     super.doHandle(target, baseRequest, servletRequest, servletResponse);
                     return;
                 }
@@ -78,7 +78,12 @@ public class RvcHandler extends ServletContextHandler {
     }
 
     void handleResourceHandle(String serverName, String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-            throws IOException, ServletException{
+            throws IOException, ServletException {
+
+        if ("/".equals(target)) {
+            return;
+        }
+
         ResourceHandler resourceHandler = resourceHandlers.get(serverName);
         if (resourceHandler == null) {
             for (String key : resourceHandlers.keySet()) {
@@ -133,11 +138,15 @@ public class RvcHandler extends ServletContextHandler {
 
             //servlet handler
             handleServlets(target, baseRequest, servletRequest, servletResponse);
-            if (baseRequest.isHandled()) {return;}
+            if (baseRequest.isHandled()) {
+                return;
+            }
 
             //resources handler
             handleResourceHandle(serverName, target, baseRequest, servletRequest, servletResponse);
-            if (baseRequest.isHandled()) {return;}
+            if (baseRequest.isHandled()) {
+                return;
+            }
 
             content = assignContent(content, response.content());
 

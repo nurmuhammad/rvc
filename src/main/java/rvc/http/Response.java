@@ -46,14 +46,22 @@ public class Response {
 
     public void redirect(String location) {
         try {
+            if(isRedirected()){
+                logger.warn("Redirect already done!");
+                return;
+            }
             response.sendRedirect(location);
             redirected = true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Redirect fail", e);
         }
     }
 
     public void redirect(String path, int statusCode) {
+        if(isRedirected()){
+            logger.warn("Redirect already done!");
+            return;
+        }
         response.setStatus(statusCode);
         response.setHeader("Location", path);
         response.setHeader("Connection", "close");

@@ -53,6 +53,7 @@ public class Session {
 
     public void invalidate() {
         session.invalidate();
+        Request.get().session = null;
     }
 
     public void remove(String name) {

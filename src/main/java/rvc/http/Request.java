@@ -23,7 +23,7 @@ public class Request {
 
     HttpServletRequest servletRequest;
 
-    private Session session = null;
+    Session session = null;
 
     private boolean forwarded = false;
 
