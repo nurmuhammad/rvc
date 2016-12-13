@@ -19,9 +19,14 @@ public class RvcFileHandler extends ResourceHandler {
     public RvcFileHandler() {
         super();
         gzipHandler.setHandler(this);
+        setEtags(true);
     }
 
     public void handleGzip(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         gzipHandler.handle(target, baseRequest, request, response);
+        if(baseRequest.isHandled()){
+            response.setHeader("Cache-Control", "max-age=86400, public");
+//            response.setHeader("Expires", "max-age=86400, public");
+        }
     }
 }

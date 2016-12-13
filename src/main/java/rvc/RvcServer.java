@@ -30,6 +30,7 @@ public class RvcServer {
 
     public static Gson GSON = new GsonBuilder().setExclusionStrategies(new AnnotationSkipStrategy()).create();
     protected Map<Template.TemplateEngine, TemplateEngine> templateMap = new HashMap<>();
+    protected Map<String, String> params = new HashMap<>();
 
     protected int port = DEFAULT_PORT;
     protected String ip = "0.0.0.0";
@@ -115,6 +116,18 @@ public class RvcServer {
     public RvcServer folder(String location, String domain) {
         folders.put(domain, location);
         return this;
+    }
+
+    public RvcServer param(String param, String value) {
+        params.put(param, value);
+        return this;
+    }
+
+    String nomilize(String param) {
+        if (param.startsWith("${") && params.containsKey(param)) {
+            return params.get(param);
+        }
+        return param;
     }
 
     public RvcServer secure(String keystoreFile, String keystorePassword,
@@ -444,10 +457,15 @@ public class RvcServer {
         String acceptType = DEFAULT_ACCEPT_TYPE;
         if (method.isAnnotationPresent(Domain.class)) {
             domain = method.getAnnotation(Domain.class).value();
+        } else if (controller.getClass().isAnnotationPresent(Domain.class)) {
+            domain = controller.getClass().getAnnotation(Domain.class).value();
         }
+        domain = nomilize(domain);
+
         if (method.isAnnotationPresent(AcceptType.class)) {
             acceptType = method.getAnnotation(AcceptType.class).value();
         }
+        acceptType = nomilize(acceptType);
         filter(httpMethod, path, domain, acceptType, () -> methodInvoke(method, controller));
 
     }
@@ -465,10 +483,14 @@ public class RvcServer {
 
         if (method.isAnnotationPresent(Domain.class)) {
             domain = method.getAnnotation(Domain.class).value();
+        } else if (controller.getClass().isAnnotationPresent(Domain.class)) {
+            domain = controller.getClass().getAnnotation(Domain.class).value();
         }
+        domain = nomilize(domain);
         if (method.isAnnotationPresent(AcceptType.class)) {
             acceptType = method.getAnnotation(AcceptType.class).value();
         }
+        acceptType = nomilize(acceptType);
 
         if (method.isAnnotationPresent(Cacheable.class)) {
             cache = method.getAnnotation(Cacheable.class).expire();
@@ -516,7 +538,7 @@ public class RvcServer {
             return;
         }
 
-        route(httpMethod, path, domain, () -> methodInvoke(method ,controller), cache, acceptType);
+        route(httpMethod, path, domain, () -> methodInvoke(method, controller), cache, acceptType);
     }
 
     private Object methodInvoke(Method method, Object controller) throws Exception {
