@@ -32,7 +32,7 @@ public class RvcHandler extends ServletContextHandler {
 
     RvcServer rvcServer;
 
-    Map<String, ResourceHandler> resourceHandlers;
+    Map<String, RvcFileHandler> resourceHandlers;
 
     public RvcHandler(Server server) {
         super(server, "/", ServletContextHandler.SESSIONS);
@@ -53,7 +53,7 @@ public class RvcHandler extends ServletContextHandler {
         }
 
         for (String key : rvcServer.folders.keySet()) {
-            ResourceHandler resourceHandler = new ResourceHandler();
+            RvcFileHandler resourceHandler = new RvcFileHandler();
             resourceHandler.setMimeTypes(new MimeTypes());
             resourceHandler.setDirectoriesListed(false);
             resourceHandler.setResourceBase(rvcServer.folders.get(key));
@@ -84,7 +84,7 @@ public class RvcHandler extends ServletContextHandler {
             return;
         }
 
-        ResourceHandler resourceHandler = resourceHandlers.get(serverName);
+        RvcFileHandler resourceHandler = resourceHandlers.get(serverName);
         if (resourceHandler == null) {
             for (String key : resourceHandlers.keySet()) {
                 if (Route.matchDomain(key, serverName)) {
@@ -98,8 +98,7 @@ public class RvcHandler extends ServletContextHandler {
         }
 
         if (resourceHandler != null) {
-            //TODO: implement gzip handler
-            resourceHandler.handle(target, baseRequest, servletRequest, servletResponse);
+            resourceHandler.handleGzip(target, baseRequest, servletRequest, servletResponse);
         }
     }
 
@@ -127,9 +126,14 @@ public class RvcHandler extends ServletContextHandler {
 
         Object content = null;
 
+        response.header("Server", " ");
+
         try {
             //BEFORE filters
             filter(HttpMethod.BEFORE, target, serverName, accept);
+
+            //TODO: kelgan urlni bazadan qarab, constant url bolsa,
+            // TODO: osha url ni ochib qaraydigan action qilish kerak;
 
             if (request.isForwarded() || response.isRedirected()) {
                 baseRequest.setHandled(true);

@@ -2,8 +2,10 @@ package rvc;
 
 import crypt.BCryptPasswordEncoder;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -57,6 +59,37 @@ public class $ {
             ret.append((char) (input.charAt(i) ^ key[i % key.length]));
         }
         return ret.toString();
+    }
+
+    public static String runFolder() {
+        String runFolder;
+        try {
+            runFolder = URLDecoder.decode(ClassLoader.getSystemClassLoader().getResource(".").getPath(), "UTF-8");
+            File tempFile = new File(runFolder);
+            if (tempFile.isDirectory()) {
+                runFolder = tempFile.getPath();
+            } else runFolder = null;
+        } catch (Throwable ignored) {
+            runFolder = null;
+        }
+
+        try {
+            if (runFolder == null) {
+                File file = new java.io.File($.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+                if (file.exists() && file.isFile()) {
+                    file = file.getParentFile();
+                }
+                runFolder = file.getPath();
+                File tempFile = new File(runFolder);
+                if (tempFile.isDirectory()) {
+                    runFolder = tempFile.getPath();
+                } else runFolder = null;
+            }
+        } catch (Throwable ignored) {
+            runFolder = null;
+        }
+
+        return runFolder;
     }
 
     public static void reverse(final Object[] array) {
