@@ -126,8 +126,6 @@ public class RvcHandler extends ServletContextHandler {
 
         Object content = null;
 
-        response.header("Server", " ");
-
         try {
             //BEFORE filters
             filter(HttpMethod.BEFORE, target, serverName, accept);
@@ -336,8 +334,8 @@ public class RvcHandler extends ServletContextHandler {
 
     }
 
-    static final String NOT_FOUND = "<!DOCTYPE html><html><head><title>404 Not found</title></head><body><h1>Not found</h1><p>The requested URL %s was not found on this server.</p></body></html>";
-    static final String INTERNAL_ERROR = "<!DOCTYPE html><html><head><title>500 Internal Error</title></head><body><h1>500 Internal Error</h1></body></html>";
-    static final String UNAUTHORIZED = "<!DOCTYPE html><html><head><title>401 Authorization Required</title></head><body><h1>401 Authorization Required</h1></body></html>";
-    static final String FORBIDDEN = "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>Forbidden</h1><p>You don't have permission to access %s on this server.</p></body></html>";
+    public static final String NOT_FOUND = "<!DOCTYPE html><html><head><title>404 Not found</title></head><body><h1>Not found</h1><p>The requested URL %s was not found on this server.</p></body></html>";
+    public static final String INTERNAL_ERROR = "<!DOCTYPE html><html><head><title>500 Internal Error</title></head><body><h1>500 Internal Error</h1></body></html>";
+    public static final String UNAUTHORIZED = "<!DOCTYPE html><html><head><title>401 Authorization Required</title></head><body><h1>401 Authorization Required</h1></body></html>";
+    public static final String FORBIDDEN = "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>Forbidden</h1><p>You don't have permission to access %s on this server.</p></body></html>";
 }
