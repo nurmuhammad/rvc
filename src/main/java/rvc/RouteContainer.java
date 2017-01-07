@@ -51,6 +51,7 @@ public class RouteContainer {
     }
 
     public Route findMatchRoute(HttpMethod httpMethod, String path, String domain, String acceptedType) {
+        ArrayList<Route> matchedRoutes = new ArrayList<>();
         for (Route route : routes) {
             if (route.httpMethod != httpMethod) {
                 continue;
@@ -58,12 +59,27 @@ public class RouteContainer {
 
             if (route.matchDomain(domain) && route.match(httpMethod, path)) {
                 if (route.matchAcceptedType(acceptedType)) {
-                    return route;
+                    matchedRoutes.add(route);
                 }
             }
         }
-        return null;
 
+        if(matchedRoutes.size()==0) return null;
+        if(matchedRoutes.size()==1) return matchedRoutes.get(0);
+
+        for(Route route : matchedRoutes){
+            if(domain.equals(route.domain)){
+                return route;
+            }
+        }
+
+        for(Route route : matchedRoutes){
+            if(!RvcServer.DEFAULT_DOMAIN.equals(route.domain)){
+                return route;
+            }
+        }
+
+        return matchedRoutes.get(0);
     }
 
     public List<Route> findMatchFilters(HttpMethod httpMethod, String path, String domain, String acceptedType) {
@@ -81,7 +97,6 @@ public class RouteContainer {
             }
         }
         return matchFilters;
-
     }
 
     public Route findMatchException(Class<? extends Exception> exception, String domain) {
