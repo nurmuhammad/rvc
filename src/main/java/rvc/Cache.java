@@ -25,7 +25,7 @@ public class Cache {
     //    static HTreeMap<String, Long> cacheLifes = db.getHashMap("CacheObjectsLife");
     static HashMap<String, Long> cacheLifes = new HashMap<>();
 
-    public synchronized static Object put(String key, Object value) {
+    public synchronized static <T> T put(String key, T value) {
         cacheLifes.remove(key);
         if (value == null) {
             cacheMap.remove(key);
@@ -35,7 +35,7 @@ public class Cache {
         return value;
     }
 
-    public synchronized static Object put(String key, Object value, long expire) {
+    public synchronized static <T> T put(String key, T value, long expire) {
         if (value == null) {
             cacheLifes.remove(key);
             cacheMap.remove(key);
@@ -46,17 +46,17 @@ public class Cache {
         return value;
     }
 
-    public static Object get(String key) {
+    public static <T> T get(String key) {
         if (key == null) return null;
 
         Long last = cacheLifes.get(key);
 
         if (last == null) {
-            return cacheMap.get(key);
+            return (T) cacheMap.get(key);
         }
 
         if (last > System.currentTimeMillis()) {
-            return cacheMap.get(key);
+            return (T) cacheMap.get(key);
         }
 
         cacheMap.remove(key);
@@ -64,4 +64,15 @@ public class Cache {
         return null;
     }
 
+    public static <T> T get(String key, long expire, Result<T> result) {
+        T r = get(key);
+        if (r == null) {
+            r = Cache.put(key, result.execute(), expire);
+        }
+        return r;
+    }
+
+    public interface Result<T> {
+        T execute();
+    }
 }

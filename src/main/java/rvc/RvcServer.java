@@ -65,7 +65,12 @@ public class RvcServer {
         connector.setHost(ip);
         connector.setPort(port);
 
-        server = connector.getServer();
+        /*ServerConnector connector2 = new ServerConnector(server);
+        connector2.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
+        connector2.setSoLingerTime(-1);
+        connector2.setHost(ip);
+        connector2.setPort(443);*/
+
         server.setConnectors(new Connector[]{connector});
 
         RvcHandler handler = new RvcHandler(server);
