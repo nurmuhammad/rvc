@@ -14,6 +14,12 @@ public class RouteContainer {
     List<Route> filters = new ArrayList<>();
     List<Route> exceptions = new ArrayList<>();
 
+    public void clear(){
+        routes.clear();
+        filters.clear();
+        exceptions.clear();
+    }
+
     public void addRoute(HttpMethod method, String path, String domain, String acceptedType, long cacheExpire, Action action) {
 
         Route route = new Route();

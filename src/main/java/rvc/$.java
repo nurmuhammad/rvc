@@ -146,4 +146,29 @@ public class $ {
         return "set" + field.substring(0, 1).toUpperCase() + field.substring(1);
     }
     // end reflection methods invokes
+
+
+    public static boolean equal(boolean eq1, boolean eq2){
+        return eq1 == eq2;
+    }
+
+    public static boolean equal(char eq1, char eq2){
+        return eq1 == eq2;
+    }
+
+     public static boolean equal(long eq1, long eq2){
+        return eq1 == eq2;
+    }
+
+    public static boolean equal(float eq1, float eq2){
+        return Float.floatToIntBits(eq1) == Float.floatToIntBits(eq2);
+    }
+
+    public static boolean equal(double eq1, double eq2){
+        return Double.doubleToLongBits(eq1) == Double.doubleToLongBits(eq2);
+    }
+
+    public static boolean equal(Object eq1, Object eq2){
+        return eq1 == null ? eq2 == null : eq1.equals(eq2);
+    }
 }

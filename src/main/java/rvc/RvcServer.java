@@ -113,6 +113,17 @@ public class RvcServer {
         return server;
     }
 
+    public void clear(){
+        errorPages.pages.clear();
+        folders.clear();
+        routeContainer.clear();
+        params.clear();
+        templateMap.clear();
+        templateSuffix="";
+        port = DEFAULT_PORT;
+        ip = "0.0.0.0";
+    }
+
     public RvcServer folder(String location) {
         folders.put(DEFAULT_DOMAIN, location);
         return this;
