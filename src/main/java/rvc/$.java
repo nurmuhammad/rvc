@@ -1,12 +1,15 @@
 package rvc;
 
 import crypt.BCryptPasswordEncoder;
+import rvc.http.Request;
+import rvc.http.Response;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 
 public class $ {
@@ -171,4 +174,69 @@ public class $ {
     public static boolean equal(Object eq1, Object eq2){
         return eq1 == null ? eq2 == null : eq1.equals(eq2);
     }
+
+    public static int now() {
+        return (int) Instant.now().getEpochSecond();
+    }
+
+    public static Object[] a(Object... objects) {
+        return objects;
+    }
+
+    public static boolean is(String method) {
+        return method != null && method.equalsIgnoreCase(Request.get().requestMethod());
+    }
+
+    public static String[] qvalues(String queryParam) {
+        return Request.get().queryParamsValues(queryParam);
+    }
+
+    public static String q(String queryParam) {
+        return Request.get().queryParams(queryParam);
+    }
+
+    public static Integer qint(String queryParam) {
+        try {
+            return Integer.valueOf(q(queryParam).trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static Long qlong(String queryParam) {
+        try {
+            return Long.valueOf(q(queryParam).trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String p(String param) {
+        return Request.get().params(param);
+    }
+
+    public static Integer pint(String param) {
+        try {
+            return Integer.valueOf(p(param.trim()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static Long plong(String param) {
+        try {
+            return Long.valueOf(p(param.trim()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String ip() {
+        return Request.get().ip();
+    }
+
+    public static void redirect(String uri) {
+        Response.get().redirect(uri);
+    }
+
 }
