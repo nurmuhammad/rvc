@@ -231,6 +231,10 @@ public class $ {
         }
     }
 
+    public static String userAgent(){
+        return Request.get().userAgent();
+    }
+
     public static String ip() {
         return Request.get().ip();
     }
