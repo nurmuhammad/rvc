@@ -243,4 +243,17 @@ public class $ {
         Response.get().redirect(uri);
     }
 
+    public static Map<String, String> headers(){
+        Map<String, String> map = new LinkedHashMap<>();
+        Enumeration<String> names = Request.get().raw().getHeaderNames();
+
+        while (names.hasMoreElements()){
+            String key = names.nextElement();
+            map.put(key, Request.get().raw().getHeader(key));
+        }
+
+        return map;
+
+    }
+
 }
