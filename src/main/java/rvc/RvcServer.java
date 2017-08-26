@@ -2,9 +2,8 @@ package rvc;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +58,13 @@ public class RvcServer {
             server = new Server();
         }
 
-        ServerConnector connector = new ServerConnector(server);
+        ServerConnector connector;
+        if (ssl != null) {
+            connector = new ServerConnector(server, secure(ssl), createHttpConnectionFactory());
+        } else {
+            connector = new ServerConnector(server);
+        }
+
         connector.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
         connector.setSoLingerTime(-1);
         connector.setHost(ip);
@@ -76,6 +81,13 @@ public class RvcServer {
         RvcHandler handler = new RvcHandler(server);
         handler.setRvcServer(this);
         return handler;
+    }
+
+    private static HttpConnectionFactory createHttpConnectionFactory() {
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSecureScheme("https");
+        httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+        return new HttpConnectionFactory(httpConfig);
     }
 
     public RvcServer quickStart() {
@@ -151,6 +163,31 @@ public class RvcServer {
         ssl = new Ssl(keystoreFile, keystorePassword,
                 truststoreFile, truststorePassword);
         return this;
+    }
+
+    public RvcServer secure(String keystoreFile, String keystorePassword,
+                            String truststoreFile, String truststorePassword, boolean needsClientCert) {
+        ssl = new Ssl(keystoreFile, keystorePassword,
+                truststoreFile, truststorePassword, needsClientCert);
+        return this;
+    }
+
+    private static SslContextFactory secure(Ssl ssl){
+        SslContextFactory sslContextFactory = new SslContextFactory(ssl.keystoreFile);
+        if (ssl.keystorePassword != null) {
+            sslContextFactory.setKeyStorePassword(ssl.keystorePassword);
+        }
+        if (ssl.truststoreFile != null) {
+            sslContextFactory.setTrustStorePath(ssl.truststoreFile);
+        }
+        if (ssl.truststorePassword != null) {
+            sslContextFactory.setTrustStorePassword(ssl.truststorePassword);
+        }
+        if (ssl.needsClientCert) {
+            sslContextFactory.setNeedClientAuth(true);
+            sslContextFactory.setWantClientAuth(true);
+        }
+        return sslContextFactory;
     }
 
     public RvcServer ip(String ip) {

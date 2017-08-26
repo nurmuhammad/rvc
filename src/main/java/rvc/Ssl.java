@@ -2,10 +2,11 @@ package rvc;
 
 public class Ssl {
 
-    protected String keystoreFile;
-    protected String keystorePassword;
-    protected String truststoreFile;
-    protected String truststorePassword;
+    String keystoreFile;
+    String keystorePassword;
+    String truststoreFile;
+    String truststorePassword;
+    boolean needsClientCert;
 
     public Ssl(String keystoreFile, String keystorePassword,
                 String truststoreFile, String truststorePassword) {
@@ -13,6 +14,15 @@ public class Ssl {
         this.keystorePassword = keystorePassword;
         this.truststoreFile = truststoreFile;
         this.truststorePassword = truststorePassword;
+    }
+
+    public Ssl(String keystoreFile, String keystorePassword,
+               String truststoreFile, String truststorePassword, boolean needsClientCert) {
+        this.keystoreFile = keystoreFile;
+        this.keystorePassword = keystorePassword;
+        this.truststoreFile = truststoreFile;
+        this.truststorePassword = truststorePassword;
+        this.needsClientCert = needsClientCert;
     }
 
     public String keystoreFile() {
@@ -29,5 +39,9 @@ public class Ssl {
 
     public String trustStorePassword() {
         return truststorePassword;
+    }
+
+    public boolean needsClientCert(){
+        return needsClientCert;
     }
 }
