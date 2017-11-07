@@ -237,6 +237,7 @@ public class RvcHandler extends ServletContextHandler {
                 outputStream.write(buffer, 0, len);
                 len = is.read(buffer);
             }
+            is.close();
         } else {
             outputStream.write(String.valueOf(content).getBytes("utf-8"));
         }
