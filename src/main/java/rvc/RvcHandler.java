@@ -178,6 +178,9 @@ public class RvcHandler extends ServletContextHandler {
 
         } catch (HaltException halt) {
             logger.debug("halting...");
+            if(halt.getAcceptedType()!=null){
+                Response.get().type(halt.getAcceptedType());
+            }
             response.status(halt.getStatusCode());
             if (content == null && halt.getBody() == null) {
                 content = "";
@@ -194,6 +197,9 @@ public class RvcHandler extends ServletContextHandler {
                 }
             } catch (HaltException halt) {
                 logger.debug("halting...");
+                if(halt.getAcceptedType()!=null){
+                    Response.get().type(halt.getAcceptedType());
+                }
                 response.status(halt.getStatusCode());
                 if (content == null && halt.getBody() == null) {
                     content = "";
