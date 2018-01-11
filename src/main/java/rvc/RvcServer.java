@@ -630,4 +630,8 @@ public class RvcServer {
     public static void halt(int status, String body) {
         throw new HaltException(status, body);
     }
+
+    public static void halt(int status, String body, String acceptedType) {
+        throw new HaltException(status, body, acceptedType);
+    }
 }
