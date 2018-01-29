@@ -14,7 +14,7 @@ public class RouteContainer {
     List<Route> filters = new ArrayList<>();
     List<Route> exceptions = new ArrayList<>();
 
-    public void clear(){
+    public void clear() {
         routes.clear();
         filters.clear();
         exceptions.clear();
@@ -70,20 +70,32 @@ public class RouteContainer {
             }
         }
 
-        if(matchedRoutes.size()==0) return null;
-        if(matchedRoutes.size()==1) return matchedRoutes.get(0);
+        if (matchedRoutes.size() == 0) return null;
+        if (matchedRoutes.size() == 1) return matchedRoutes.get(0);
 
-        for(Route route : matchedRoutes){
-            if(domain.equals(route.domain)){
+        for (Route route : matchedRoutes) {
+            if (domain.equals(route.domain)) {
                 return route;
             }
         }
 
-        for(Route route : matchedRoutes){
-            if(!RvcServer.DEFAULT_DOMAIN.equals(route.domain)){
+        for (Route route : matchedRoutes) {
+            if (!RvcServer.DEFAULT_DOMAIN.equals(route.domain)) {
                 return route;
             }
         }
+
+        Route moreSimilar = matchedRoutes.get(0);
+        double distance0 = 0;
+        for (Route route : matchedRoutes) {
+            if (route == moreSimilar) continue;
+            double distance = Similarity.similarity(path.replace("//", "/"), route.path.replace("//", "/"));
+            if (distance == 1.0) return route;
+            if (distance > distance0) {
+                moreSimilar = route;
+            }
+        }
+        if (moreSimilar != null) return moreSimilar;
 
         return matchedRoutes.get(0);
     }
