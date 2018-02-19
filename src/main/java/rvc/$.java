@@ -48,11 +48,11 @@ public class $ {
     }
 
     public static String b64encode(String s) {
-        return Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
+        return Base64.getUrlEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
     }
 
     public static String b64decode(String s) {
-        return new String(Base64.getDecoder().decode(s), StandardCharsets.UTF_8);
+        return new String(Base64.getUrlDecoder().decode(s), StandardCharsets.UTF_8);
     }
 
     public static String xor(String input, String KEY) {
