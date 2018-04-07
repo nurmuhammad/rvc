@@ -16,6 +16,7 @@ public class Cache {
 
     static final String cacheFile = $.getCurrentClassPath() + File.separator + "cache.db";
 
+
     /*static DB db = DBMaker
             .newTempFileDB()
             .transactionDisable()
