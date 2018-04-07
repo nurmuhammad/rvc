@@ -4,7 +4,9 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Nurmuhammad on 09-Jan-16.
@@ -12,18 +14,33 @@ import java.util.HashMap;
 
 public class Cache {
 
-    static DB db = DBMaker
+    static final String cacheFile = $.getCurrentClassPath() + File.separator + "cache.db";
+
+    /*static DB db = DBMaker
             .newTempFileDB()
             .transactionDisable()
             .closeOnJvmShutdown()
             .cacheLRUEnable()
             .mmapFileEnableIfSupported()
             .mmapFileEnablePartial()
+            .make();*/
+
+    private static final DB db = DBMaker
+            .fileDB(cacheFile)
+            .fileMmapEnableIfSupported()
+            .fileMmapPreclearDisable()
+            .closeOnJvmShutdown()
+            .fileChannelEnable()
             .make();
 
-    static HTreeMap<String, Object> cacheMap = db.getHashMap("CacheObjects");
+    private static HTreeMap cacheMap = db.hashMap("map")
+            .createOrOpen();
+    private static HTreeMap cacheLifes= db.hashMap("expire")
+            .createOrOpen();
+
+    /*static HTreeMap<String, Object> cacheMap = db.getHashMap("CacheObjects");
     //    static HTreeMap<String, Long> cacheLifes = db.getHashMap("CacheObjectsLife");
-    static HashMap<String, Long> cacheLifes = new HashMap<>();
+    static HashMap<String, Long> cacheLifes = new HashMap<>();*/
 
     public synchronized static <T> T put(String key, T value) {
         cacheLifes.remove(key);
@@ -49,7 +66,7 @@ public class Cache {
     public static <T> T get(String key) {
         if (key == null) return null;
 
-        Long last = cacheLifes.get(key);
+        Long last = (Long) cacheLifes.get(key);
 
         if (last == null) {
             return (T) cacheMap.get(key);

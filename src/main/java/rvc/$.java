@@ -7,6 +7,7 @@ import rvc.http.Response;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -254,6 +255,15 @@ public class $ {
 
         return map;
 
+    }
+
+    public static String getCurrentClassPath() {
+        URL url = $.class.getResource("/");
+        if (null == url) {
+            File f = new File($.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+            return f.getPath();
+        }
+        return new File(url.getPath()).getPath();
     }
 
 }
