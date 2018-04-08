@@ -32,6 +32,7 @@ public class RvcServer {
     protected Map<String, String> params = new HashMap<>();
 
     protected int port = DEFAULT_PORT;
+    protected int ports = -1;
     protected String ip = "0.0.0.0";
     protected String templateSuffix = "";
 
@@ -58,25 +59,26 @@ public class RvcServer {
             server = new Server();
         }
 
-        ServerConnector connector;
-        if (ssl != null) {
-            connector = new ServerConnector(server, secure(ssl), createHttpConnectionFactory());
-        } else {
-            connector = new ServerConnector(server);
-        }
-
+        ServerConnector connector = new ServerConnector(server);
         connector.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
         connector.setSoLingerTime(-1);
         connector.setHost(ip);
         connector.setPort(port);
 
-        /*ServerConnector connector2 = new ServerConnector(server);
-        connector2.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
-        connector2.setSoLingerTime(-1);
-        connector2.setHost(ip);
-        connector2.setPort(443);*/
+        ServerConnector sslConnector = null;
+        if (ssl != null) {
+            sslConnector = new ServerConnector(server, secure(ssl), createHttpConnectionFactory());
+            sslConnector.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
+            sslConnector.setSoLingerTime(-1);
+            sslConnector.setHost(ip);
+            sslConnector.setPort(ports);
+        }
 
-        server.setConnectors(new Connector[]{connector});
+        if(sslConnector==null){
+            server.setConnectors(new Connector[]{connector});
+        } else {
+            server.setConnectors(new Connector[]{connector, sslConnector});
+        }
 
         RvcHandler handler = new RvcHandler(server);
         handler.setRvcServer(this);
@@ -86,6 +88,7 @@ public class RvcServer {
     private static HttpConnectionFactory createHttpConnectionFactory() {
         HttpConfiguration httpConfig = new HttpConfiguration();
         httpConfig.setSecureScheme("https");
+        httpConfig.addCustomizer(new SecureRequestCustomizer());
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
         return new HttpConnectionFactory(httpConfig);
     }
@@ -125,13 +128,13 @@ public class RvcServer {
         return server;
     }
 
-    public void clear(){
+    public void clear() {
         errorPages.pages.clear();
         folders.clear();
         routeContainer.clear();
         params.clear();
         templateMap.clear();
-        templateSuffix="";
+        templateSuffix = "";
         port = DEFAULT_PORT;
         ip = "0.0.0.0";
     }
@@ -172,7 +175,7 @@ public class RvcServer {
         return this;
     }
 
-    private static SslContextFactory secure(Ssl ssl){
+    private static SslContextFactory secure(Ssl ssl) {
         SslContextFactory sslContextFactory = new SslContextFactory(ssl.keystoreFile);
         if (ssl.keystorePassword != null) {
             sslContextFactory.setKeyStorePassword(ssl.keystorePassword);
@@ -197,6 +200,11 @@ public class RvcServer {
 
     public RvcServer port(int port) {
         this.port = port;
+        return this;
+    }
+
+    public RvcServer ports(int port) {
+        this.ports = ports;
         return this;
     }
 
