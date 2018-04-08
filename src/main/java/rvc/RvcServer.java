@@ -161,16 +161,16 @@ public class RvcServer {
         return param;
     }
 
-    public RvcServer secure(String keystoreFile, String keystorePassword,
+    public RvcServer secure(String keystoreFile, String keystorePassword, String keyManagerPassword,
                             String truststoreFile, String truststorePassword) {
-        ssl = new Ssl(keystoreFile, keystorePassword,
+        ssl = new Ssl(keystoreFile, keystorePassword, keyManagerPassword,
                 truststoreFile, truststorePassword);
         return this;
     }
 
-    public RvcServer secure(String keystoreFile, String keystorePassword,
+    public RvcServer secure(String keystoreFile, String keystorePassword, String keyManagerPassword,
                             String truststoreFile, String truststorePassword, boolean needsClientCert) {
-        ssl = new Ssl(keystoreFile, keystorePassword,
+        ssl = new Ssl(keystoreFile, keystorePassword, keyManagerPassword,
                 truststoreFile, truststorePassword, needsClientCert);
         return this;
     }
@@ -180,6 +180,11 @@ public class RvcServer {
         if (ssl.keystorePassword != null) {
             sslContextFactory.setKeyStorePassword(ssl.keystorePassword);
         }
+
+        if(ssl.keyManagerPassword!=null) {
+            sslContextFactory.setKeyManagerPassword(ssl.keyManagerPassword);
+        }
+
         if (ssl.truststoreFile != null) {
             sslContextFactory.setTrustStorePath(ssl.truststoreFile);
         }
