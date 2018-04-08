@@ -203,7 +203,7 @@ public class RvcServer {
         return this;
     }
 
-    public RvcServer ports(int port) {
+    public RvcServer ports(int ports) {
         this.ports = ports;
         return this;
     }
