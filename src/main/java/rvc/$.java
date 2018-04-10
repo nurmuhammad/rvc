@@ -33,6 +33,11 @@ public class $ {
         return new Date(timestamp * 1000L);
     }
 
+    public static boolean isEmpty(String value) {
+        if (value == null) return true;
+        return value.trim().length() == 0;
+    }
+
     public static boolean isEmpty(Object value) {
         if (value == null) return true;
         if (value instanceof String)
@@ -152,27 +157,27 @@ public class $ {
     // end reflection methods invokes
 
 
-    public static boolean equal(boolean eq1, boolean eq2){
+    public static boolean equal(boolean eq1, boolean eq2) {
         return eq1 == eq2;
     }
 
-    public static boolean equal(char eq1, char eq2){
+    public static boolean equal(char eq1, char eq2) {
         return eq1 == eq2;
     }
 
-     public static boolean equal(long eq1, long eq2){
+    public static boolean equal(long eq1, long eq2) {
         return eq1 == eq2;
     }
 
-    public static boolean equal(float eq1, float eq2){
+    public static boolean equal(float eq1, float eq2) {
         return Float.floatToIntBits(eq1) == Float.floatToIntBits(eq2);
     }
 
-    public static boolean equal(double eq1, double eq2){
+    public static boolean equal(double eq1, double eq2) {
         return Double.doubleToLongBits(eq1) == Double.doubleToLongBits(eq2);
     }
 
-    public static boolean equal(Object eq1, Object eq2){
+    public static boolean equal(Object eq1, Object eq2) {
         return eq1 == null ? eq2 == null : eq1.equals(eq2);
     }
 
@@ -232,23 +237,53 @@ public class $ {
         }
     }
 
-    public static String userAgent(){
+    public static String userAgent() {
         return Request.get().userAgent();
     }
 
-    public static String ip() {
-        return Request.get().ip();
+    public static String address() {
+        String address = ipAddress();
+        if (isEmpty(address) || "unknown".equalsIgnoreCase(address)) {
+            address = Request.get().ip();
+        }
+        if (isEmpty(address)) {
+            address = "Unknown";
+        }
+        return address;
+    }
+
+    public static String ipAddress() {
+        String unknown = "unknown";
+        Request request = Request.get();
+
+        String ipAddress = request.header("x-forwarded-for");
+        if (isEmpty(ipAddress) || unknown.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.header("Proxy-Client-IP");
+        }
+        if (isEmpty(ipAddress) || unknown.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.header("WL-Proxy-Client-IP");
+        }
+        if (isEmpty(ipAddress) || unknown.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.header("X-Real-IP");
+        }
+        if (isEmpty(ipAddress) || unknown.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.header("HTTP_CLIENT_IP");
+        }
+        if (isEmpty(ipAddress) || unknown.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.header("HTTP_X_FORWARDED_FOR");
+        }
+        return ipAddress;
     }
 
     public static void redirect(String uri) {
         Response.get().redirect(uri);
     }
 
-    public static Map<String, String> headers(){
+    public static Map<String, String> headers() {
         Map<String, String> map = new LinkedHashMap<>();
         Enumeration<String> names = Request.get().raw().getHeaderNames();
 
-        while (names.hasMoreElements()){
+        while (names.hasMoreElements()) {
             String key = names.nextElement();
             map.put(key, Request.get().raw().getHeader(key));
         }

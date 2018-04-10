@@ -41,4 +41,10 @@ public class Similarity {
         }
         return costs[s2.length()];
     }
+
+    //TODO: example this
+    public static void main(String[] args) {
+        System.out.println(similarity("api/v.1/dashboard/item/list", "api/v.1/dashboard/item/:id"));
+        System.out.println(similarity("api/v.1/dashboard/item/list", "api/v.1/dashboard/item//list"));
+    }
 }
