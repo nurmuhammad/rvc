@@ -30,7 +30,7 @@ public class Cache {
             .fileDB(cacheFile)
             .fileMmapEnableIfSupported()
             .fileMmapPreclearDisable()
-            .closeOnJvmShutdown()
+            .closeOnJvmShutdownWeakReference()
             .fileChannelEnable()
             .make();
 
