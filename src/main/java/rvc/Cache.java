@@ -27,10 +27,10 @@ public class Cache {
             .make();*/
 
     private static final DB db = DBMaker
-            .fileDB(cacheFile)
+            .tempFileDB()
             .fileMmapEnableIfSupported()
             .fileMmapPreclearDisable()
-            .closeOnJvmShutdownWeakReference()
+            .closeOnJvmShutdown()
             .fileChannelEnable()
             .make();
 
