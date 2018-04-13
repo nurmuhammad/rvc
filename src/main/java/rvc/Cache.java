@@ -27,11 +27,14 @@ public class Cache {
             .make();*/
 
     private static final DB db = DBMaker
-            .tempFileDB()
+            .fileDB(cacheFile)
+//            .tempFileDB()
             .fileMmapEnableIfSupported()
             .fileMmapPreclearDisable()
+            .transactionEnable()
             .closeOnJvmShutdown()
             .fileChannelEnable()
+            .checksumHeaderBypass()
             .make();
 
     private static HTreeMap cacheMap = db.hashMap("map")
@@ -53,6 +56,12 @@ public class Cache {
         return value;
     }
 
+    public synchronized static <T> T putAndCommit(String key, T value) {
+        put(key, value);
+        db.commit();
+        return value;
+    }
+
     public synchronized static <T> T put(String key, T value, long expire) {
         if (value == null) {
             cacheLifes.remove(key);
@@ -61,6 +70,12 @@ public class Cache {
         }
         cacheLifes.put(key, (System.currentTimeMillis() + expire));
         cacheMap.put(key, value);
+        return value;
+    }
+
+    public synchronized static <T> T putAndCommit(String key, T value, long expire) {
+        put(key, value, expire);
+        db.commit();
         return value;
     }
 
@@ -79,15 +94,20 @@ public class Cache {
 
         cacheMap.remove(key);
         cacheLifes.remove(key);
+        db.commit();
         return null;
     }
 
     public static <T> T get(String key, long expire, Result<T> result) {
         T r = get(key);
         if (r == null) {
-            r = Cache.put(key, result.execute(), expire);
+            r = Cache.putAndCommit(key, result.execute(), expire);
         }
         return r;
+    }
+
+    public static void commit() {
+        db.commit();
     }
 
     public interface Result<T> {
