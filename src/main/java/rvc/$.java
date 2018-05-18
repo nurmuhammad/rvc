@@ -298,7 +298,11 @@ public class $ {
             File f = new File($.class.getProtectionDomain().getCodeSource().getLocation().getPath());
             return f.getPath();
         }
-        return new File(url.getPath()).getPath();
+        String path = new File(url.getPath()).getPath();
+        if (path.endsWith(".jar")) {
+            path = new File(path).getParent();
+        }
+        return path;
     }
 
 }
